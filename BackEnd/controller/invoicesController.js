@@ -83,4 +83,4 @@ export const getNextInvoiceNumber = async(req, res) => {
     }
 }
 
-export { getAllSavedInvoices }x
+export { getAllSavedInvoices }
