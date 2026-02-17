@@ -1,1 +1,1 @@
-export const baseUrl = `https://invoice-gen-pro-flax.vercel.app`
+export const baseUrl = `https://invoice-gen-new.vercel.app`
