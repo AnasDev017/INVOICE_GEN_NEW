@@ -1,0 +1,1 @@
+export const baseUrl = `https://invoice-gen-pro-flax.vercel.app`
