@@ -60,6 +60,7 @@ import {
   Upload,
 } from "lucide-react";
 import axios from "axios";
+import { baseUrl } from "../utils/apiConstant.js";
 import { useNavigate } from "react-router-dom";
 import Loader from "./Loader";
 
