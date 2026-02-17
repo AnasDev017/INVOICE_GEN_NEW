@@ -63,6 +63,7 @@ import { baseUrl } from "../utils/apiConstant.js";
 import axios from "axios";
 import api from "../utils/axiosInstance";
 import { useNavigate } from "react-router-dom";
+import Loader from "./Loader";
 
 const ClientsPage = () => {
   // State to manage view: 'list' or 'form'
@@ -146,11 +147,7 @@ const ClientsPage = () => {
   }, [formData]);
 
   if (loading) {
-    return (
-      <div className="min-h-[70vh] flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
+    return <Loader />;
   }
 
   return (

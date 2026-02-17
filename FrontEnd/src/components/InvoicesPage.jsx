@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Filter, Search, ChevronDown, X, Printer, Plus, Eye, Download, Trash2, 
-  CheckCircle2, Clock, AlertCircle, Loader2 
+import {
+  Filter, Search, ChevronDown, X, Printer, Plus, Eye, Download, Trash2,
+  CheckCircle2, Clock, AlertCircle, Loader2
 } from "lucide-react";
 import axios from "axios";
 import { baseUrl } from "../utils/apiConstant.js";
+import Loader from "./Loader";
 
 const InvoicesPage = ({ setPage }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -25,17 +26,19 @@ const InvoicesPage = ({ setPage }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const [loading, setLoading] = useState(true);
+
   // Fetch invoices from API
   const fetchInvoices = async () => {
     try {
       const res = await axios.get(`${baseUrl}/getAllSavedInvoices`, { withCredentials: true });
       const data = res.data.user || [];
-      
+
       // Remove duplicates based on invoiceNumber
       const uniqueInvoicesMap = new Map();
       data.forEach(inv => {
         if (!uniqueInvoicesMap.has(inv.invoiceNumber)) {
-             uniqueInvoicesMap.set(inv.invoiceNumber, inv);
+          uniqueInvoicesMap.set(inv.invoiceNumber, inv);
         }
       });
       const uniqueInvoices = Array.from(uniqueInvoicesMap.values());
@@ -53,12 +56,18 @@ const InvoicesPage = ({ setPage }) => {
       console.log("SAVED INVOICES API DATA", formattedInvoices);
     } catch (error) {
       console.log("SAVED INVOICES API DATA ERR", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchInvoices();
   }, []);
+
+  if (loading) {
+    return <Loader />;
+  }
 
   const filteredInvoices = allInvoices.filter(inv => {
     const matchesSearch =
@@ -151,7 +160,7 @@ const InvoicesPage = ({ setPage }) => {
   }, [allInvoices]);
 
   const getStatusIcon = (status) => {
-    switch(status) {
+    switch (status) {
       case "Paid": return <CheckCircle2 size={12} className="text-green-600" />;
       case "Pending": return <Clock size={12} className="text-yellow-600" />;
       case "Overdue": return <AlertCircle size={12} className="text-red-600" />;
@@ -170,10 +179,10 @@ const InvoicesPage = ({ setPage }) => {
               Invoice Management
             </h2>
             <p className="text-gray-400 text-md font-medium max-w-xl leading-relaxed">
-              Experience live, high-fidelity invoice blueprints. 
+              Experience live, high-fidelity invoice blueprints.
             </p>
           </motion.div>
-          <motion.button 
+          <motion.button
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.4, duration: 0.5 }}
@@ -264,23 +273,23 @@ const InvoicesPage = ({ setPage }) => {
                         </span>
                       </td>
                       <td className="py-6 px-4 pr-10 text-right flex gap-3 justify-end">
-                        <button 
+                        <button
                           onClick={(e) => handleView(invoice._id, e)}
-                          className="p-2.5 text-slate-600 border border-slate-200 bg-white hover:bg-black hover:border-black hover:text-white rounded-xl transition-all shadow-sm hover:shadow-md active:scale-95" 
+                          className="p-2.5 text-slate-600 border border-slate-200 bg-white hover:bg-black hover:border-black hover:text-white rounded-xl transition-all shadow-sm hover:shadow-md active:scale-95"
                           title="View Detail"
                         >
                           <Eye size={16} />
                         </button>
-                        <button 
+                        <button
                           onClick={(e) => handleDownload(invoice._id, invoice.id, e)}
-                          className="p-2.5 text-slate-600 border border-slate-200 bg-white hover:bg-black hover:border-black hover:text-white rounded-xl transition-all shadow-sm hover:shadow-md active:scale-95" 
+                          className="p-2.5 text-slate-600 border border-slate-200 bg-white hover:bg-black hover:border-black hover:text-white rounded-xl transition-all shadow-sm hover:shadow-md active:scale-95"
                           title="Download PDF"
                         >
                           <Download size={16} />
                         </button>
-                        <button 
+                        <button
                           onClick={(e) => handleDelete(invoice._id, e)}
-                          className="p-2.5 text-red-500 border border-red-100 bg-red-50 hover:bg-red-500 hover:border-red-500 hover:text-white rounded-xl transition-all shadow-sm hover:shadow-md active:scale-95" 
+                          className="p-2.5 text-red-500 border border-red-100 bg-red-50 hover:bg-red-500 hover:border-red-500 hover:text-white rounded-xl transition-all shadow-sm hover:shadow-md active:scale-95"
                           title="Delete"
                         >
                           <Trash2 size={16} />
@@ -307,54 +316,54 @@ const InvoicesPage = ({ setPage }) => {
           {/* Mobile View */}
           <div className="md:hidden space-y-4 p-4">
             <AnimatePresence mode="popLayout">
-                {filteredInvoices.map(invoice => (
-                    <motion.div layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} key={invoice.id} className="bg-white border border-gray-100 p-5 rounded-2xl shadow-sm">
-                        <div className="flex justify-between items-start mb-4">
-                            <div>
-                                <h4 className="font-bold text-lg text-black">{invoice.client}</h4>
-                                <p className="text-xs text-gray-400 font-medium">#{invoice.id}</p>
-                            </div>
-                            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black border uppercase tracking-wider ${getStatusStyle(invoice.status)}`}>
-                                {getStatusIcon(invoice.status)} {invoice.status}
-                            </span>
-                        </div>
-                        <div className="flex justify-between items-end">
-                            <div>
-                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Amount</p>
-                                <p className="text-xl font-black text-black">${invoice.amount}</p>
-                            </div>
-                            <div className="flex gap-2">
-                                <button 
-                                  onClick={(e) => handleView(invoice._id, e)}
-                                  className="p-2 text-slate-600 border border-slate-200 bg-white hover:bg-black hover:border-black hover:text-white rounded-lg transition-all active:scale-95" 
-                                >
-                                  <Eye size={16} />
-                                </button>
-                                <button 
-                                  onClick={(e) => handleDownload(invoice._id, invoice.id, e)}
-                                  className="p-2 text-slate-600 border border-slate-200 bg-white hover:bg-black hover:border-black hover:text-white rounded-lg transition-all active:scale-95" 
-                                >
-                                  <Download size={16} />
-                                </button>
-                                <button 
-                                  onClick={(e) => handleDelete(invoice._id, e)}
-                                  className="p-2 text-red-500 border border-red-100 bg-red-50 hover:bg-red-500 hover:border-red-500 hover:text-white rounded-lg transition-all active:scale-95" 
-                                >
-                                  <Trash2 size={16} />
-                                </button>
-                            </div>
-                        </div>
-                    </motion.div>
-                ))}
-                {filteredInvoices.length === 0 && (
-                     <div className="py-20 text-center">
-                        <div className="flex flex-col items-center gap-2">
-                          <Search size={40} className="text-gray-100" />
-                          <p className="text-sm font-bold text-gray-400">No invoices found</p>
-                          <button onClick={() => { setActiveFilter("All"); setSearchTerm(""); }} className="text-[10px] font-black uppercase text-black underline underline-offset-4">Clear all search</button>
-                        </div>
-                      </div>
-                  )}
+              {filteredInvoices.map(invoice => (
+                <motion.div layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} key={invoice.id} className="bg-white border border-gray-100 p-5 rounded-2xl shadow-sm">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h4 className="font-bold text-lg text-black">{invoice.client}</h4>
+                      <p className="text-xs text-gray-400 font-medium">#{invoice.id}</p>
+                    </div>
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black border uppercase tracking-wider ${getStatusStyle(invoice.status)}`}>
+                      {getStatusIcon(invoice.status)} {invoice.status}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Amount</p>
+                      <p className="text-xl font-black text-black">${invoice.amount}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={(e) => handleView(invoice._id, e)}
+                        className="p-2 text-slate-600 border border-slate-200 bg-white hover:bg-black hover:border-black hover:text-white rounded-lg transition-all active:scale-95"
+                      >
+                        <Eye size={16} />
+                      </button>
+                      <button
+                        onClick={(e) => handleDownload(invoice._id, invoice.id, e)}
+                        className="p-2 text-slate-600 border border-slate-200 bg-white hover:bg-black hover:border-black hover:text-white rounded-lg transition-all active:scale-95"
+                      >
+                        <Download size={16} />
+                      </button>
+                      <button
+                        onClick={(e) => handleDelete(invoice._id, e)}
+                        className="p-2 text-red-500 border border-red-100 bg-red-50 hover:bg-red-500 hover:border-red-500 hover:text-white rounded-lg transition-all active:scale-95"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+              {filteredInvoices.length === 0 && (
+                <div className="py-20 text-center">
+                  <div className="flex flex-col items-center gap-2">
+                    <Search size={40} className="text-gray-100" />
+                    <p className="text-sm font-bold text-gray-400">No invoices found</p>
+                    <button onClick={() => { setActiveFilter("All"); setSearchTerm(""); }} className="text-[10px] font-black uppercase text-black underline underline-offset-4">Clear all search</button>
+                  </div>
+                </div>
+              )}
             </AnimatePresence>
           </div>
 

@@ -59,9 +59,9 @@ import {
   Palette,
   Upload,
 } from "lucide-react";
-import { baseUrl } from "../utils/apiConstant.js";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import Loader from "./Loader";
 
 
 // --- MOCK DATA ---
@@ -522,23 +522,38 @@ const DashboardPage = ({ setPage }) => {
   const [stats, setStats] = useState([]);
   const [chartData, setChartData] = useState([]);
 
+  const fetchStats = async () => {
+    try {
+      const res = await axios.get(`${baseUrl}/getDashboardStats`, {
+        withCredentials: true,
+      });
+      if (res.data.success) {
+        setStats(res.data.stats);
+        setChartData(res.data.chartData);
+      }
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    }
+  };
+
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    const fetchStats = async () => {
+    const loadData = async () => {
       try {
-        const res = await axios.get(`${baseUrl}/getDashboardStats`, {
-          withCredentials: true,
-        });
-        if (res.data.success) {
-          setStats(res.data.stats);
-          setChartData(res.data.chartData);
-        }
+        await Promise.all([fetchStats(), fetchInvoices()]);
       } catch (error) {
-        console.error("Error fetching stats:", error);
+        console.error("Error loading dashboard data:", error);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchStats();
-    fetchInvoices();
+    loadData();
   }, []);
+
+  if (loading) {
+    return <Loader />;
+  }
   return (
     <>
       <AnimatePresence>
