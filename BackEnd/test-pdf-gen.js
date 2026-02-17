@@ -20,4 +20,5 @@ const dummyData = {
 const writeStream = fs.createWriteStream('test_invoice.pdf');
 createInvoicePDF(dummyData, writeStream);
 
-console.log('PDF generation started. Check test_invoice.pdf');
+console.log('PDF generation started. Check test_invoice.');
+console.log('PDF generation started. Check test_invoice.');
