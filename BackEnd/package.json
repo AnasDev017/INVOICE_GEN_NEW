@@ -14,7 +14,6 @@
     "node": "20.x"
   },
   "dependencies": {
-    "@sparticuz/chromium": "^132.0.0",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.8.0",
@@ -28,6 +27,6 @@
     "multer": "^2.0.2",
     "nodemailer": "^7.0.11",
     "nodemon": "^3.1.11",
-    "puppeteer-core": "^24.1.1"
+    "pdfkit": "^0.17.2"
   }
 }
