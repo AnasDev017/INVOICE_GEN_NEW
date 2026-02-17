@@ -6,178 +6,111 @@ export const createInvoicePDF = (data, res) => {
   // Stream to response
   doc.pipe(res);
 
-  // --- Helper Functions ---
-  const generateHeader = (doc) => {
-    doc
-      .fillColor('#6b7280') // Gray-500
-      .fontSize(10)
-      .text('YOUR LOGO', 50, 57, { align: 'left' }) 
-      .text(`NO. ${data.invoiceNumber}`, 200, 57, { align: 'right' })
-      .moveDown();
-  };
+  // --- Design Constants ---
+  const primaryColor = '#000000'; // Black
+  const secondaryColor = '#444444'; // Dark Gray for secondary text
+  const lineColor = '#E0E0E0'; // Light Gray for dividers
 
-  const generateTitle = (doc) => {
-    doc
-      .fillColor('#1a1a1a')
-      .fontSize(40)
-      .font('Helvetica-Bold')
-      .text('INVOICE', 50, 100);
-  };
+  // --- 1. Header Section ---
+  doc.fillColor(primaryColor)
+     .fontSize(20)
+     .font('Helvetica-Bold')
+     .text('INVOICE', 50, 50, { align: 'right' });
 
-  const generateDate = (doc) => {
-    doc
-      .fillColor('#000000')
-      .fontSize(10)
-      .font('Helvetica-Bold')
-      .text('Date: ', 50, 160, { continued: true })
-      .font('Helvetica')
-      .text(data.date);
-  };
+  doc.fontSize(10)
+     .font('Helvetica')
+     .text(`Invoice Number: ${data.invoiceNumber}`, 50, 75, { align: 'right' })
+     .text(`Date: ${new Date(data.date).toLocaleDateString()}`, 50, 90, { align: 'right' });
 
-  const generateCustomerInformation = (doc) => {
-    const customerInfoTop = 200;
+  // Logo Placeholder (Text-based for now)
+  doc.fontSize(14)
+     .font('Helvetica-Bold')
+     .text('YOUR BRAND', 50, 50, { align: 'left' });
 
-    // Billed To
-    doc
-      .fontSize(10)
-      .font('Helvetica-Bold')
-      .text('Billed to:', 50, customerInfoTop);
-    
-    doc
-      .font('Helvetica-Bold')
-      .fontSize(10)
-      .text(data.clientName, 50, customerInfoTop + 15)
-      .font('Helvetica')
-      .fillColor('#4b5563')
-      .text(data.clientEmail, 50, customerInfoTop + 30);
+  // Separator Line
+  doc.moveTo(50, 115).lineTo(545, 115).strokeColor(lineColor).lineWidth(1).stroke();
 
-    // From
-    const rightColX = 350;
-    doc
-      .fillColor('#000000')
-      .font('Helvetica-Bold')
-      .text('From:', rightColX, customerInfoTop);
-    
-    doc
-      .font('Helvetica-Bold')
-      .text(data.senderName, rightColX, customerInfoTop + 15)
-      .font('Helvetica')
-      .fillColor('#4b5563')
-      .text(data.senderEmail, rightColX, customerInfoTop + 30);
-  };
+  // --- 2. Client & Sender Details ---
+  const detailsTop = 130;
 
-  const generateInvoiceTable = (doc) => {
-    let i;
-    const invoiceTableTop = 300;
-    const tableHeaderY = invoiceTableTop;
+  // "Billed To" Column
+  doc.fontSize(10).font('Helvetica-Bold').fillColor(primaryColor).text('Billed To:', 50, detailsTop);
+  doc.font('Helvetica').fillColor(secondaryColor)
+     .text(data.clientName, 50, detailsTop + 15)
+     .text(data.clientEmail, 50, detailsTop + 28);
+     // Add Address if available in data, mostly likely plain text
 
-    doc.font('Helvetica-Bold');
-    generateTableRow(
-      doc,
-      tableHeaderY,
-      'Item',
-      'Qty',
-      'Price',
-      'Amount'
-    );
-    
-    // Draw thick line below header
-    generateHr(doc, tableHeaderY + 20);
-    doc.font('Helvetica');
+  // "From" Column
+  doc.font('Helvetica-Bold').fillColor(primaryColor).text('From:', 300, detailsTop);
+  doc.font('Helvetica').fillColor(secondaryColor)
+     .text('Anas Hussain', 300, detailsTop + 15) // Hardcoded sender for now, or use data if passed
+     .text('anastahirhussain7@gmail.com', 300, detailsTop + 28);
 
-    let position = 0;
-    for (i = 0; i < data.items.length; i++) {
-      const item = data.items[i];
-      const quantity = Number(item.quantity);
-      const price = Number(item.price);
-      const amount = quantity * price;
-
-      position = invoiceTableTop + (i + 1) * 30;
-      generateTableRow(
-        doc,
-        position,
-        item.description,
-        quantity,
-        `$${price.toFixed(2)}`,
-        `$${amount.toFixed(2)}`
-      );
-
-      generateHr(doc, position + 20);
-    }
-    
-    return position;
-  };
-
-  const generateFooter = (doc, currentY) => {
-    const footerTop = currentY + 30;
-
-    // Subtotal
-    doc
-        .fontSize(10)
-        .text('Subtotal', 350, footerTop, { align: 'left' })
-        .text(`$${Number(data.subTotal).toFixed(2)}`, 350, footerTop, { align: 'right' });
-    
-    // Discount
-    doc
-        .fillColor('#ff0000') // Red
-        .text('Discount', 350, footerTop + 15, { align: 'left' })
-        .text(`-$${Number(data.discount).toFixed(2)}`, 350, footerTop + 15, { align: 'right' });
-
-    // Total
-    doc
-        .fillColor('#000000')
-        .font('Helvetica-Bold')
-        .fontSize(14)
-        .text('Total', 350, footerTop + 35, { align: 'left' })
-        .text(`$${Number(data.grandTotal).toFixed(2)}`, 350, footerTop + 35, { align: 'right' });
-
-    // Waves (Decorative)
-    addWaves(doc);
-  };
+  // --- 3. Items Table ---
+  const tableTop = 200;
   
-  const generateTableRow = (doc, y, item, qty, price, lineTotal) => {
-    doc
-      .fontSize(10)
-      .text(item, 50, y)
-      .text(qty, 280, y, { width: 90, align: 'center' })
-      .text(price, 370, y, { width: 90, align: 'center' })
-      .text(lineTotal, 0, y, { align: 'right' });
-  };
+  // Table Header Background (Optional: Black bar for high contrast)
+  // doc.rect(50, tableTop, 495, 20).fill(primaryColor);
   
-  const generateHr = (doc, y) => {
-    doc
-      .strokeColor('#aaaaaa')
-      .lineWidth(1)
-      .moveTo(50, y)
-      .lineTo(550, y)
-      .stroke();
-  };
+  // Table Headers
+  const itemX = 50;
+  const qtyX = 350;
+  const priceX = 420;
+  const amountX = 490;
 
-  const addWaves = (doc) => {
-      // Simple visual representation of waves at the bottom
-      const bottomY = doc.page.height - 100;
-      
-      doc.save();
-      // Wave 1
-      doc.path(`M0,${bottomY + 50} C200,${bottomY} 400,${bottomY + 150} 850,${bottomY + 50} V${doc.page.height} H0 Z`)
-         .fillOpacity(0.8)
-         .fillColor('#7d7d7d');
-      
-      // Wave 2   
-      doc.path(`M0,${bottomY + 100} C300,${bottomY + 20} 600,${bottomY + 180} 850,${bottomY + 80} V${doc.page.height} H0 Z`)
-         .fillOpacity(1)
-         .fillColor('#4a4a4a');
-         
-      doc.restore();
-  };
+  doc.fontSize(10).font('Helvetica-Bold').fillColor(primaryColor);
+  doc.text('Item Description', itemX, tableTop + 5);
+  doc.text('Qty', qtyX, tableTop + 5);
+  doc.text('Price', priceX, tableTop + 5);
+  doc.text('Amount', amountX, tableTop + 5, { align: 'right', width: 55 });
 
-  // --- Execute ---
-  generateHeader(doc);
-  generateTitle(doc);
-  generateDate(doc);
-  generateCustomerInformation(doc);
-  const finalY = generateInvoiceTable(doc);
-  generateFooter(doc, finalY);
+  // Header bottom border
+  doc.moveTo(50, tableTop + 20).lineTo(545, tableTop + 20).strokeColor(primaryColor).lineWidth(1.5).stroke();
+
+  // Table Rows
+  let y = tableTop + 30;
+  doc.font('Helvetica').fontSize(10).fillColor(secondaryColor);
+
+  data.items.forEach((item, i) => {
+    const amount = Number(item.quantity) * Number(item.price);
+    
+    doc.text(item.description || item.name || "Item", itemX, y); // Fallback for description/name
+    doc.text(item.quantity.toString(), qtyX, y);
+    doc.text(`$${Number(item.price).toFixed(2)}`, priceX, y);
+    doc.text(`$${amount.toFixed(2)}`, amountX, y, { align: 'right', width: 55 });
+
+    // Light row separator
+    y += 20;
+    doc.moveTo(50, y - 5).lineTo(545, y - 5).strokeColor(lineColor).lineWidth(0.5).stroke();
+  });
+
+  // --- 4. Totals Section ---
+  const totalsTop = y + 20;
+  const totalsLabelX = 350;
+  const totalsValueX = 490;
+
+  // Subtotal
+  doc.font('Helvetica').fillColor(secondaryColor).text('Subtotal:', totalsLabelX, totalsTop);
+  doc.text(`$${Number(data.subTotal || 0).toFixed(2)}`, totalsValueX, totalsTop, { align: 'right', width: 55 });
+
+  // Discount (if any)
+  if (data.discount > 0) {
+      doc.text('Discount:', totalsLabelX, totalsTop + 15);
+      doc.text(`-$${Number(data.discount).toFixed(2)}`, totalsValueX, totalsTop + 15, { align: 'right', width: 55 });
+  }
+
+  // Total (Bold/Black)
+  const totalY = data.discount > 0 ? totalsTop + 35 : totalsTop + 20;
+  
+  doc.font('Helvetica-Bold').fillColor(primaryColor).fontSize(12)
+     .text('Total:', totalsLabelX, totalY);
+  doc.text(`$${Number(data.grandTotal || data.totalAmount).toFixed(2)}`, totalsValueX, totalY, { align: 'right', width: 55 });
+
+  // --- 5. Footer ---
+  // Stick to bottom
+  const bottom = doc.page.height - 50;
+  doc.fontSize(10).font('Helvetica').fillColor(secondaryColor)
+     .text('Thank you for your business.', 50, bottom, { align: 'center', width: 495 });
 
   doc.end();
 };
