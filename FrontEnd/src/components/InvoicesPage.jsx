@@ -65,9 +65,7 @@ const InvoicesPage = ({ setPage }) => {
     fetchInvoices();
   }, []);
 
-  if (loading) {
-    return <Loader />;
-  }
+
 
   const filteredInvoices = allInvoices.filter(inv => {
     const matchesSearch =
@@ -167,6 +165,10 @@ const InvoicesPage = ({ setPage }) => {
       default: return null;
     }
   };
+
+  if (loading) {
+    return <Loader />;
+  }
 
   return (
     <div className="min-h-screen bg-[#F9F9F9] p-4 sm:p-8 md:p-10 font-sans text-slate-900 overflow-x-hidden">
